@@ -1,0 +1,90 @@
+#+TITLE: CHAI: A CHatbot AI
+[[https://arxiv.org/abs/2204.08426][https://img.shields.io/badge/arXiv-2204.08426-red.svg]] [[https://opensource.org/licenses/MIT][https://img.shields.io/badge/License-MIT-yellow.svg]]
+
+This repository contains the code for [[https://siddharthverma314.github.io/research/chai-acl-2022/][CHAI: A CHatbot AI for Task-Oriented Dialogue with Offline Reinforcement Learning]].
+
+[[./chai.png]]
+
+* Installation Steps
+The minimum python version required for this repo is =3.8=. Install this package by running the following command in the main directory:
+
+#+begin_src bash
+  pip install -r requirements.txt
+  export PYTHONPATH=$PWD:$PYTHONPATH
+#+end_src
+
+* Reproducing our results
+We list all steps required to reproduce our results and baselines below.
+
+** Download data
+To download all data required for the experiments and baselines, navigate to the data folder and run `make`. To only download data for training CHAI, run `make dataset`. To remove all downloaded files, run `make clean`.
+
+** Finetuning the Language Model
+We use GPT-2 as our language model. To finetune GPT-2 on the craigslist dataset, determine the largest batch size that your GPU can hold, and run the following command from the base directory =scripts/transformers=:
+
+#+begin_src bash
+  python finetune_gpt2.py \
+	 --gpt2-type gpt2-medium \
+	 --train-fp ../../data/train.json \
+	 --val-fp ../../data/dev.json \
+	 --batch-size <BATCH_SIZE> \
+	 --output-dir ./logs/gpt2
+#+end_src
+
+We then use the Finetuned GPT to generate candidates and embeddings via the following command:
+
+#+begin_src bash
+  python generate_sentences.py <CHECKPOINT_DIR>
+  python generate_embeddings.py <CHECKPOINT_DIR>
+#+end_src
+
+where =<CHECKPOINT_DIR>= is the directory created from the previous command, for example, =logs/gpt2/checkpoint-2000/=.
+
+This should create =sentences.pkl= and =embeddings.pkl= files.
+
+** Training the RL agent
+After generating the candidates and embeddings, we can train CHAI by using the scripts in the =scripts/train= directory. For example, to train CHAI with EMAQ, run
+
+#+begin_src bash
+  python chai_emaq.py \
+	   --logdir ./logs/chai \
+	   --filepath ./data/train.json \
+	   --embeddings <PATH TO embeddings.pkl> \
+	   --sentences <PATH TO sentences.pkl>
+#+end_src
+
+* Evaluate the model
+To play around with CHAI, run the following command:
+
+#+begin_src bash
+  python eval.py \
+	 --data-path <path to test.json> \
+	 --gpt-dir <gpt checkpoint> \
+	 --checkpoint-file <chai checkpoint> \
+	 --buyer human \
+	 --seller ours \
+	 --num-rollouts 50 \
+	 --output-path "results_human.json" \
+	 --debug
+#+end_src
+
+The =eval.py= script also contains options for the automatic evaluations done in the paper, which can be accomplished by changing the =buyer= option to different values. Check out the script for more details.
+
+* Cite our work
+If you found our work useful, please cite it as follows:
+
+#+begin_src: bibtex
+@inproceedings{verma-2022-chai,
+    title = "{CHAI}: A {CH}atbot {AI} for Task-Oriented Dialogue with Offline Reinforcement Learning",
+    author = "Verma, Siddharth AND Fu, Justin AND Yang, Sherry AND Levine, Sergey",
+    booktitle = "Proceedings of the 2022 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies",
+    month = jul,
+    year = "2022",
+    address = "Seattle, United States",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2022.naacl-main.332",
+    pages = "4471--4491",
+}
+#+end_src
+
+Feel free to contact me at vsiddharth@berkeley.edu for any questions or concerns!

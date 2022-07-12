@@ -1,0 +1,6 @@
+*.png
+*.json
+.ipynb_checkpoints/
+!results.ipynb
+*.sh
+*.zip

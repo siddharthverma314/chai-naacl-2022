@@ -1,0 +1,16 @@
+-f https://download.pytorch.org/whl/torch_stable.html
+torch==1.7.1+cu110
+torchtext==0.8.*
+gym==0.17.*
+transformers
+flatten_dict
+tensorboard
+cpprb
+termcolor
+pygments
+tabulate
+nltk
+sklearn
+pandas
+sacremoses
+ujson
